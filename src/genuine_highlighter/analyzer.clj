@@ -105,3 +105,14 @@
                  (vary-meta into (info m))))
            x))]
     (postwalk annotate-info form)))
+
+;;
+;; Entry point
+;;
+(defn analyze
+  ([form] (analyze *ns* form))
+  ([ns form]
+     (let [form (add-marks form)]
+       (->> form
+            (extract (default-env ns))
+            (annotate form)))))
