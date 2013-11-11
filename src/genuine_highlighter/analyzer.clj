@@ -30,7 +30,7 @@
       (ns-resolve (:ns env) n)))
 
 (defn- extend [env n v]
-  (update-in env [:locals n] v))
+  (assoc-in env [:locals n] v))
 
 ;;
 ;; Extraction
@@ -116,3 +116,60 @@
        (->> form
             (extract (default-env ns))
             (annotate form)))))
+
+;;
+;; Implementation of etraction methods
+;; for each special form (related to bindings)
+;;
+(defmethod extract-from-special 'def [env [op name expr]]
+  (apply conj {}
+         (when-let [m (get-mark op)]
+           {::type :special ::op op})
+         {::type :var :usage :def ::name name}
+         (extract env expr)))
+
+(defn- extract-from-bindings [env bindings]
+  (loop [env env, [[name expr] & more :as bindings] (partition 2 bindings), ret {}]
+    (if (empty? bindings)
+      [ret env]
+      (let [m (get-mark name)
+            e {::type :local ::usage :def}]
+        (recur (extend env name e)
+               more
+               (conj ret (if m {m e} {}) (extract env expr)))))))
+
+(defmethod extract-from-special 'let* [env [op bindings & body]]
+  (apply conj {}
+         (when-let [m (get-mark op)]
+           {m {::type :special ::op op}})
+         (let [[info env] (extract-from-bindings env bindings)]
+           (merge info (extract-from-forms env body)))))
+
+(defmethod extract-from-special 'loop* [env [op bindings & body]]
+  (apply conj {}
+         (when-let [m (get-mark op)]
+           {m {::type :special ::op op}})
+         (let [[info env] (extract-from-bindings env bindings)]
+           (merge info (extract-from-forms env body)))))
+
+(defmethod extract-from-special 'fn* [env [op & more]]
+  #_(let [maybe-name (first more)
+        fname (if (symbol? maybe-name) maybe-name nil)
+        clauses (if fname (rest more) more)
+        clauses (if (vector? (first clauses))
+                  (list clauses)
+                  clauses)
+        e {::type :local ::usage :def}
+        env (if fname (extend env fname e) env)]
+    (apply conj {}
+           (when-let [m (get-mark op)]
+             {m {::type :special ::op op}})
+           (when-let [m (get-mark fname)]
+             {m e})
+           )))
+
+(defmethod extract-from-special 'letfn* [env [op & more]])
+
+(defmethod extract-from-special 'catch [env [op exn e & body]])
+
+(defmethod extract-from-special '. [env [op target field-or-method]])
