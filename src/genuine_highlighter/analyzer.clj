@@ -45,9 +45,9 @@
 (defn- extract-from-symbol [env sym]
   (or (when-let [m (get-mark sym)]
         (let [e (lookup env sym)]
-          (cond (var? e) {m {::type :var ::usage ::ref ::var e}}
+          (cond (var? e) {m {::type :var ::usage ::ref :var e}}
                 (class? e) {m {::type :class ::class e}}
-                e {m {::type :local ::usage ref ::binding e}}
+                e {m {::type :local ::usage :ref ::binding e}}
                 :else nil)))
       {}))
 
@@ -125,7 +125,7 @@
   (apply conj {}
          (when-let [m (get-mark op)]
            {::type :special ::op op})
-         {::type :var :usage :def ::name name}
+         {::type :var ::usage :def ::name name}
          (extract env expr)))
 
 (defn- extract-from-bindings [env bindings]
