@@ -124,8 +124,9 @@
 (defmethod extract-from-special 'def [env [op name expr]]
   (apply conj {}
          (when-let [m (get-mark op)]
-           {::type :special ::op op})
-         {::type :var ::usage :def ::name name}
+           {m {::type :special ::op op}})
+         (when-let [m (get-mark name)]
+           {m {::type :var ::usage :def ::name name}})
          (extract env expr)))
 
 (defn- extract-from-bindings [env bindings]
