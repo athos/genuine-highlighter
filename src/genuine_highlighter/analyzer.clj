@@ -121,6 +121,11 @@
 ;; Implementation of etraction methods
 ;; for each special form (related to bindings)
 ;;
+(defmethod extract-from-special 'quote [env [op arg]]
+  (apply conj {}
+         (when-let [m (get-mark op)]
+           {m {::type :special ::op op}})))
+
 (defmethod extract-from-special 'def [env [op name expr]]
   (apply conj {}
          (when-let [m (get-mark op)]
