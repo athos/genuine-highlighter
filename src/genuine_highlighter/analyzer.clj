@@ -195,3 +195,7 @@
 (defmethod extract-from-special 'catch [env [op exn e & body]])
 
 (defmethod extract-from-special '. [env [op target field-or-method]])
+
+(defmethod extract-from-special 'reify* [env form])
+
+(defmethod extract-from-special 'deftype* [env form])
