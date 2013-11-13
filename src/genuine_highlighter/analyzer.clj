@@ -153,8 +153,24 @@
          (let [[info env] (extract-from-bindings env bindings)]
            (merge info (extract-from-forms env body)))))
 
+(defn- extract-from-args [env args]
+  (loop [env env, [name & more :as args] args, ret {}]
+    (if (empty? args)
+      [ret env]
+      (let [m (get-mark name)
+            e {::type :local ::usage :def}]
+        (recur (extend env name e)
+               more
+               (if m (assoc ret m e) ret))))))
+
+(defn- extract-from-clauses [env clauses]
+  (->> (for [[args & body] clauses
+             :let [[info env] (extract-from-args env args)]]
+         (merge info (extract-from-forms env body)))
+       (into {})))
+
 (defmethod extract-from-special 'fn* [env [op & more]]
-  #_(let [maybe-name (first more)
+  (let [maybe-name (first more)
         fname (if (symbol? maybe-name) maybe-name nil)
         clauses (if fname (rest more) more)
         clauses (if (vector? (first clauses))
@@ -167,7 +183,7 @@
              {m {::type :special ::op op}})
            (when-let [m (get-mark fname)]
              {m e})
-           )))
+           (extract-from-clauses env clauses))))
 
 (defmethod extract-from-special 'letfn* [env [op & more]])
 
