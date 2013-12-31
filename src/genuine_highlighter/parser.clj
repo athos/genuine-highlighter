@@ -21,18 +21,7 @@
   (fn [& args]
     (throw (Exception. (str "reader macro " m " not implemented yet")))))
 
-(defn- dispatch-macros [ch]
-  (case ch
-    \^ (not-implemented "#^") #_read-meta
-    \' (not-implemented "#'") #_(wrapping-reader 'var)
-    \( (not-implemented "#(") #_read-fn
-    \= (not-implemented "#=") #_read-eval
-    \{ (not-implemented "#{") #_read-set
-    \< (not-implemented "#<") #_(throwing-reader "Unreadable form")
-    \" (not-implemented "#\"") #_read-regex
-    \! (not-implemented "#!") #_read-comment
-    \_ (not-implemented "#_") #_read-discard
-    nil))
+(declare dispatch-macros macros parse)
 
 (defn- read-dispatch
   [rdr _]
@@ -45,6 +34,84 @@
           (types/reader-error rdr "No dispatch macro for " ch)))
     (types/reader-error rdr "EOF while reading character")))
 
+(defn- parse-delimited [delim rdr recursive?]
+  (let [first-line (when (types/indexing-reader? rdr)
+                     (types/get-line-number rdr))
+        delim (utils/char delim)]
+    (loop [a []]
+      (let [ch (types/read-char rdr)]
+        (cond (nil? ch)
+              #_=> (types/reader-error
+                     rdr
+                     "EOF while reading"
+                     (when first-line
+                       (str ", starting at line " first-line)))
+              (identical? delim (utils/char ch))
+              #_=> a
+              (whitespace? ch)
+              #_=> (recur (conj a (parse-whitespaces rdr ch)))
+              (macros ch)
+              #_=> (let [macrofn (macros ch)
+                         mret (types/log-source-unread rdr (macrofn rdr ch))]
+                     (recur (if-not (identical? mret rdr) (conj a mret) a)))
+              :else
+              #_=> (let [o (doall (parse (doto rdr (types/unread ch)) true))]
+                     (recur (if-not (identical? o rdr) (into a o) a))))))))
+
+(defn- parse-list
+  [rdr _]
+  (let [[start-line start-column]
+        (when (types/indexing-reader? rdr)
+          [(types/get-line-number rdr) (int (dec (types/get-column-number rdr)))])
+        the-list (parse-delimited \) rdr true)
+        [end-line end-column]
+        (when (types/indexing-reader? rdr)
+          [(types/get-line-number rdr) (int (types/get-column-number rdr))])]
+    (with-meta {:type :list, :nodes the-list}
+      (when start-line
+        {:line start-line
+         :column start-column
+         :end-line end-line
+         :end-column end-column}))))
+
+(defn- parse-vector
+  [rdr _]
+  (let [[start-line start-column]
+        (when (types/indexing-reader? rdr)
+          [(types/get-line-number rdr) (int (dec (types/get-column-number rdr)))])
+        the-vector (parse-delimited \] rdr true)
+        [end-line end-column]
+        (when (types/indexing-reader? rdr)
+          [(types/get-line-number rdr) (int (types/get-column-number rdr))])]
+    (with-meta {:type :vector, :nodes the-vector}
+      (when start-line
+        {:line start-line
+         :column start-column
+         :end-line end-line
+         :end-column end-column}))))
+
+(defn- parse-map
+  [rdr _]
+  (let [[start-line start-column]
+        (when (types/indexing-reader? rdr)
+          [(types/get-line-number rdr) (int (dec (types/get-column-number rdr)))])
+        the-map (parse-delimited \} rdr true)
+        ;map-count (count the-map)
+        [end-line end-column]
+        (when (types/indexing-reader? rdr)
+          [(types/get-line-number rdr) (int (dec (types/get-column-number rdr)))])]
+    #_(when (odd? map-count)
+      (types/reader-error rdr "Map literal must contain an even number of forms"))
+    (with-meta {:type :map, :nodes the-map}
+      (when start-line
+        {:line start-line
+         :column start-column
+         :end-line end-line
+         :end-column end-column}))))
+
+(defn- parse-set [rdr _]
+  {:type :set, :nodes (parse-delimited \} rdr true)})
+
 (defn- macros [ch]
   (case ch
     \" (not-implemented \") #_read-string*
@@ -55,15 +122,28 @@
     \^ (not-implemented \^) #_read-meta
     \` (not-implemented \`) #_read-syntax-quote ;;(wrapping-reader 'syntax-quote)
     \~ (not-implemented \~) #_read-unquote
-    \( (not-implemented \() #_read-list
+    \( parse-list
     \) (not-implemented \)) #_read-unmatched-delimiter
-    \[ (not-implemented \[) #_read-vector
+    \[ parse-vector
     \] (not-implemented \]) #_read-unmatched-delimiter
-    \{ (not-implemented \{) #_read-map
+    \{ parse-map
     \} (not-implemented \}) #_read-unmatched-delimiter
     \\ (not-implemented \\) #_read-char*
     \% (not-implemented \%) #_read-arg
     \# read-dispatch
+    nil))
+
+(defn- dispatch-macros [ch]
+  (case ch
+    \^ (not-implemented "#^") #_read-meta
+    \' (not-implemented "#'") #_(wrapping-reader 'var)
+    \( (not-implemented "#(") #_read-fn
+    \= (not-implemented "#=") #_read-eval
+    \{ parse-set
+    \< (not-implemented "#<") #_(throwing-reader "Unreadable form")
+    \" (not-implemented "#\"") #_read-regex
+    \! (not-implemented "#!") #_read-comment
+    \_ (not-implemented "#_") #_read-discard
     nil))
 
 (defn parse
