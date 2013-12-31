@@ -5,3 +5,4 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.reader "0.8.3"]]
+  :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.4"]]}})
