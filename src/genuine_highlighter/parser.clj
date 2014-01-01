@@ -146,6 +146,12 @@
     \_ (not-implemented "#_") #_read-discard
     nil))
 
+(def new-id
+  (let [n (atom 0)]
+    (fn []
+      (swap! n inc)
+      @n)))
+
 (defn parse
   ([reader] (parse reader true))
   ([reader eof-error?]
@@ -167,7 +173,9 @@
                                 (if (identical? res reader)
                                   (parse reader eof-error?)
                                   res))
-                              {:type :symbol :symbol (#'r/read-symbol reader ch)})
+                              {:type :symbol
+                               :symbol (#'r/read-symbol reader ch)
+                               :id (new-id)})
                             list))))
          (catch Exception e
            (if (utils/ex-info? e)
