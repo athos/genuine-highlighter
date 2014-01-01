@@ -1,21 +1,8 @@
 (ns genuine-highlighter.analyzer
   (:refer-clojure :exclude [extend])
-  (:require [clojure.walk :refer [postwalk]]))
-
-;;
-;; Marks
-;;
-(defn- gen-mark []
-  (gensym 'mark))
-
-(defn- add-mark [x]
-  (vary-meta x assoc ::mark (gen-mark)))
-
-(defn- get-mark [x]
-  (::mark (meta x)))
-
-(defn- add-marks [form]
-  (postwalk #(if (symbol? %) (add-mark %) %) form))
+  (:require [clojure.walk :refer [postwalk]]
+            [genuine-highlighter.parser :refer [parse]]
+            [genuine-highlighter.converter :refer [convert get-id]]))
 
 ;;
 ;; Environment
@@ -43,7 +30,7 @@
   (specials op))
 
 (defn- extract-from-symbol [env sym]
-  (or (when-let [m (get-mark sym)]
+  (or (when-let [m (get-id sym)]
         (let [e (lookup env sym)]
           (cond (var? e) {m {::type :var ::usage ::ref :var e}}
                 (class? e) {m {::type :class ::class e}}
@@ -59,7 +46,7 @@
 (defmulti ^:private extract-from-special (fn [env [op]] op))
 (defmethod extract-from-special :default [env [op & args]]
   (apply conj {}
-         (when-let [m (get-mark op)]
+         (when-let [m (get-id op)]
            {m {::type :special ::op op}})
          (extract-from-forms env args)))
 
@@ -74,7 +61,7 @@
                 #_=> (extract-from-forms env seq)
                 (var? e)
                 #_=> (apply conj {}
-                            (when-let [m (get-mark op)]
+                            (when-let [m (get-id op)]
                               {m {::type :macro ::macro e}})
                             (extract env expanded))
                 :else (extract env expanded)))
@@ -123,14 +110,14 @@
 ;;
 (defmethod extract-from-special 'quote [env [op arg]]
   (apply conj {}
-         (when-let [m (get-mark op)]
+         (when-let [m (get-id op)]
            {m {::type :special ::op op}})))
 
 (defmethod extract-from-special 'def [env [op name expr]]
   (apply conj {}
-         (when-let [m (get-mark op)]
+         (when-let [m (get-id op)]
            {m {::type :special ::op op}})
-         (when-let [m (get-mark name)]
+         (when-let [m (get-id name)]
            {m {::type :var ::usage :def ::name name}})
          (extract env expr)))
 
@@ -138,7 +125,7 @@
   (loop [env env, [[name expr] & more :as bindings] (partition 2 bindings), ret {}]
     (if (empty? bindings)
       [ret env]
-      (let [m (get-mark name)
+      (let [m (get-id name)
             e {::type :local ::usage :def}]
         (recur (extend env name e)
                more
@@ -146,14 +133,14 @@
 
 (defmethod extract-from-special 'let* [env [op bindings & body]]
   (apply conj {}
-         (when-let [m (get-mark op)]
+         (when-let [m (get-id op)]
            {m {::type :special ::op op}})
          (let [[info env] (extract-from-bindings env bindings)]
            (merge info (extract-from-forms env body)))))
 
 (defmethod extract-from-special 'loop* [env [op bindings & body]]
   (apply conj {}
-         (when-let [m (get-mark op)]
+         (when-let [m (get-id op)]
            {m {::type :special ::op op}})
          (let [[info env] (extract-from-bindings env bindings)]
            (merge info (extract-from-forms env body)))))
@@ -162,7 +149,7 @@
   (loop [env env, [name & more :as args] args, ret {}]
     (if (empty? args)
       [ret env]
-      (let [m (get-mark name)
+      (let [m (get-id name)
             e {::type :local ::usage :def}]
         (recur (extend env name e)
                more
@@ -184,9 +171,9 @@
         e {::type :local ::usage :def}
         env (if fname (extend env fname e) env)]
     (apply conj {}
-           (when-let [m (get-mark op)]
+           (when-let [m (get-id op)]
              {m {::type :special ::op op}})
-           (when-let [m (get-mark fname)]
+           (when-let [m (get-id fname)]
              {m e})
            (extract-from-clauses env clauses))))
 
