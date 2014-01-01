@@ -1,11 +1,15 @@
 (ns genuine-highlighter.converter)
 
+(defn get-id [x]
+  (::id (meta x)))
+
 (declare convert)
 
 (defmulti ^:private convert* :type)
 
 (defmethod convert* :symbol [x]
-  (:symbol x))
+  (with-meta (:symbol x)
+    {::id (:id x)}))
 
 (defmethod convert* :number [x]
   (:number x))
