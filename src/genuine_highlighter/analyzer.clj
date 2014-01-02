@@ -82,16 +82,12 @@
 ;;
 ;; Annotation
 ;;
-(defn- annotate [form info]
-  (letfn
-      [(annotate-info [x]
-         (if (symbol? x)
-           (let [m (get-mark x)]
-             (-> x
-                 (vary-meta dissoc m)
-                 (vary-meta into (info m))))
-           x))]
-    (postwalk annotate-info form)))
+(defn- annotate [x info]
+  (letfn [(annotate-info [x]
+            (if (and (map? x) (= (:type x) :symbol))
+              (assoc x :usage (info (:id x)))
+              x))]
+    (postwalk annotate-info x)))
 
 ;;
 ;; Entry point
