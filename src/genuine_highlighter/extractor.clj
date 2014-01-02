@@ -31,9 +31,9 @@
 (defn- extract-from-symbol [env sym]
   (or (when-let [m (get-id sym)]
         (let [e (lookup env sym)]
-          (cond (var? e) {m {::type :var ::usage ::ref :var e}}
-                (class? e) {m {::type :class ::class e}}
-                e {m {::type :local ::usage :ref ::binding e}}
+          (cond (var? e) {m {:type :var :usage :ref :var e}}
+                (class? e) {m {:type :class :class e}}
+                e {m {:type :local :usage :ref :binding e}}
                 :else nil)))
       {}))
 
@@ -46,7 +46,7 @@
 (defmethod extract-from-special :default [env [op & args]]
   (apply conj {}
          (when-let [m (get-id op)]
-           {m {::type :special ::op op}})
+           {m {:type :special :op op}})
          (extract-from-forms env args)))
 
 (defn- extract-from-seq [env [op :as seq]]
@@ -61,7 +61,7 @@
                 (var? e)
                 #_=> (apply conj {}
                             (when-let [m (get-id op)]
-                              {m {::type :macro ::macro e}})
+                              {m {:type :macro :macro e}})
                             (extract* env expanded))
                 :else (extract* env expanded)))
         (extract-from-forms env seq)))))
@@ -90,14 +90,14 @@
 (defmethod extract-from-special 'quote [env [op arg]]
   (apply conj {}
          (when-let [m (get-id op)]
-           {m {::type :special ::op op}})))
+           {m {:type :special :op op}})))
 
 (defmethod extract-from-special 'def [env [op name expr]]
   (apply conj {}
          (when-let [m (get-id op)]
-           {m {::type :special ::op op}})
+           {m {:type :special :op op}})
          (when-let [m (get-id name)]
-           {m {::type :var ::usage :def ::name name}})
+           {m {:type :var :usage :def :name name}})
          (extract* env expr)))
 
 (defn- extract-from-bindings [env bindings]
@@ -105,7 +105,7 @@
     (if (empty? bindings)
       [ret env]
       (let [m (get-id name)
-            e {::type :local ::usage :def}]
+            e {:type :local :usage :def}]
         (recur (extend env name e)
                more
                (conj ret (if m {m e} {}) (extract* env expr)))))))
@@ -113,14 +113,14 @@
 (defmethod extract-from-special 'let* [env [op bindings & body]]
   (apply conj {}
          (when-let [m (get-id op)]
-           {m {::type :special ::op op}})
+           {m {:type :special :op op}})
          (let [[info env] (extract-from-bindings env bindings)]
            (merge info (extract-from-forms env body)))))
 
 (defmethod extract-from-special 'loop* [env [op bindings & body]]
   (apply conj {}
          (when-let [m (get-id op)]
-           {m {::type :special ::op op}})
+           {m {:type :special :op op}})
          (let [[info env] (extract-from-bindings env bindings)]
            (merge info (extract-from-forms env body)))))
 
@@ -129,7 +129,7 @@
     (if (empty? args)
       [ret env]
       (let [m (get-id name)
-            e {::type :local ::usage :def}]
+            e {:type :local :usage :def}]
         (recur (extend env name e)
                more
                (if m (assoc ret m e) ret))))))
@@ -147,11 +147,11 @@
         clauses (if (vector? (first clauses))
                   (list clauses)
                   clauses)
-        e {::type :local ::usage :def}
+        e {:type :local :usage :def}
         env (if fname (extend env fname e) env)]
     (apply conj {}
            (when-let [m (get-id op)]
-             {m {::type :special ::op op}})
+             {m {:type :special :op op}})
            (when-let [m (get-id fname)]
              {m e})
            (extract-from-clauses env clauses))))
