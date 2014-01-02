@@ -93,12 +93,11 @@
 ;; Entry point
 ;;
 (defn analyze
-  ([form] (analyze *ns* form))
-  ([ns form]
-     (let [form (add-marks form)]
-       (->> form
-            (extract (default-env ns))
-            (annotate form)))))
+  ([x] (analyze *ns* x))
+  ([ns x]
+     (->> (convert x)
+          (extract (default-env ns))
+          (annotate x))))
 
 ;;
 ;; Implementation of etraction methods
