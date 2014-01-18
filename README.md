@@ -1,4 +1,5 @@
 # genuine-highlighter
+[![Build Status](https://travis-ci.org/athos/genuine-highlighter.png)](https://travis-ci.org/athos/genuine-highlighter)
 
 A Clojure library designed to ... well, that part is up to you.
 
