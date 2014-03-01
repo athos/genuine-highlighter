@@ -1,43 +1,62 @@
-(ns genuine-highlighter.renderer)
+(ns genuine-highlighter.renderer
+  (:require [genuine-highlighter.parser :as p]))
 
 (defn- maybe [x & args]
   (when-not (nil? x)
     (apply x args)))
 
 (defn apply-rule [r x]
-  (if-let [f (r (:type x))]
-    (assoc x :contents
+  (if-let [f (r (:tag x))]
+    (assoc x :content
            (mapcat (fn [[p v]] [p (or (-> f (maybe p) (maybe x v)) v)])
-                   (partition 2 (:contents x))))
+                   (partition 2 (:content x))))
     x))
 
-(declare render)
+(declare render-seq)
 
-(defmulti ^:private prepare (fn [_ x] (:type x)))
+(defmulti ^:private prepare (fn [_ x] (p/node-tag x)))
 
-(defmethod prepare :whitespaces [r x]
-  [:raw (:raw x)])
+(defmethod prepare :default [r x]
+  [:content (p/node-content x)])
+
+(defmethod prepare :root [r x]
+  [:content (render-seq r (p/node-content* x))])
 
 (defmethod prepare :symbol [r x]
-  [:symbol (:symbol x)])
+  (let [[maybe-ns _ maybe-name] (p/node-content* x)
+        sym (if maybe-name
+              (symbol (p/node-content maybe-ns) (p/node-content maybe-name))
+              (symbol (p/node-content maybe-ns)))]
+    [:content sym]))
 
-(defmethod prepare :number [r x]
-  [:number (:number x)])
+(defn- prepare-nested [r x open close]
+  `[:open ~open
+    ~@(let [[open & maybe-content] (p/node-content* x)
+            content (take-while #(not= % close) maybe-content)]
+        (when content
+          [:nodes (render-seq r content)]))
+    :close ~close])
 
 (defmethod prepare :list [r x]
-  [:lparen "(" :nodes (render r (:nodes x)) :rparen ")"])
+  (prepare-nested r x "(" ")"))
 
 (defmethod prepare :vector [r x]
-  [:lbracket "[" :nodes (render r (:nodes x)) :rbracket "]"])
+  (prepare-nested r x "[" "]"))
 
-(defn- render* [r x]
-  (->> (prepare r x)
-       (assoc x :contents)
-       (apply-rule r)
-       :contents
+(defmethod prepare :map [r x]
+  (prepare-nested r x "{" "}"))
+
+(defmethod prepare :set [r x]
+  (prepare-nested r x "#{" "}"))
+
+(defn render [rule node]
+  (->> (prepare rule node)
+       (assoc node :content)
+       (apply-rule rule)
+       :content
        (partition 2)
        (map second)
        (apply str)))
 
-(defn render [rule nodes]
-  (apply str (map #(render* rule %) nodes)))
+(defn- render-seq [rule nodes]
+  (apply str (map #(render rule %) nodes)))
