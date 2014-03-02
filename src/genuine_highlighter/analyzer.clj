@@ -1,17 +1,20 @@
 (ns genuine-highlighter.analyzer
   (:require [clojure.walk :refer [postwalk]]
             [genuine-highlighter.converter :refer [convert]]
-            [genuine-highlighter.extractor :refer [extract]]))
+            [genuine-highlighter.extractor :refer [extract]])
+  (:import net.cgrand.parsley.Node))
 
 ;;
 ;; Annotation
 ;;
-(defn- annotate [x info]
-  (letfn [(annotate-info [x]
-            (if (and (map? x) (= (:type x) :symbol))
-              (assoc x :usage (info (:id x)))
-              x))]
-    (postwalk annotate-info x)))
+(defn- annotate [node info]
+  (if (string? node)
+    node
+    (let [{:keys [content]} node
+          node' (assoc node :content (mapv #(annotate % info) content))]
+      (if-let [usage (and (= (:tag node) :symbol) (info (:id node)))]
+        (assoc node' :usage usage)
+        node'))))
 
 ;;
 ;; Entry point
