@@ -1,31 +1,52 @@
-(ns genuine-highlighter.converter)
+(ns genuine-highlighter.converter
+  (:require [genuine-highlighter.parser :as p])
+  (:import net.cgrand.parsley.Node))
 
 (defn get-id [x]
   (::id (meta x)))
 
-(declare convert)
+(defn- remove-whitespaces [content]
+  (filterv #(or (not (instance? Node %))
+                (not (#{:whitespace :newline} (p/node-tag %))))
+           content))
 
-(defmulti ^:private convert* :type)
+(defmulti ^:private convert* p/node-tag)
 
 (defmethod convert* :symbol [x]
-  (with-meta (:symbol x)
-    {::id (:id x)}))
+  (let [[maybe-ns _ maybe-name] (p/node-content* x)
+        sym (if maybe-name
+              (symbol (p/node-content maybe-ns) (p/node-content maybe-name))
+              (symbol (p/node-content maybe-ns)))]
+    (with-meta sym
+      {::id (:id x)})))
 
 (defmethod convert* :number [x]
-  (:number x))
+  (read-string (p/node-content x)))
+
+(declare convert-seq)
 
 (defmethod convert* :list [x]
-  (map convert* (filter #(not= (:type %) :whitespaces) (:nodes x))))
+  (convert-seq x))
 
 (defmethod convert* :vector [x]
-  (vec (convert* (assoc x :type :list))))
+  (vec (convert-seq x)))
 
 (defmethod convert* :map [x]
-  (into {} (map vec (partition 2 (convert* (assoc x :type :list))))))
+  (into {} (map vec (partition 2 (convert-seq x)))))
 
 (defmethod convert* :set [x]
-  (set (convert* (assoc x :type :list))))
+  (set (convert-seq x)))
 
-(defn convert [xs]
-  (when-let [x (first (drop-while #(= (:type %) :whitespaces) xs))]
-    (convert* x)))
+(defn- essential-content [x]
+  (remove-whitespaces (p/node-content* x)))
+
+(defn convert [root]
+  (some->> (essential-content root)
+           first
+           convert*))
+
+(defn- convert-seq [x]
+  (->> (essential-content x)
+       butlast
+       rest
+       (map convert*)))
