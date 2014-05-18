@@ -8,7 +8,7 @@
       (swap! n inc)
       @n)))
 
-(def ^{:arglist '[s]} parse
+(def ^:private parse*
   (letfn [(make-node [tag content]
             (let [node (p/->Node tag content)]
               (if (= tag :symbol)
@@ -20,6 +20,9 @@
                     :make-node make-node
                     }
                    s/rules)))
+
+(defn parse [s]
+  (parse* s))
 
 (defn node-tag [node]
   (:tag node))
