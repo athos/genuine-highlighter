@@ -26,8 +26,21 @@
             (flush)
             (recur code'))))))
 
+(defn browse-highlighted-code [filename]
+  (if filename
+    (try
+      (print (hl/highlight t/colorful-symbols-rule (slurp filename)))
+      (flush))
+    (throw (Exception. "specify namespace to be highlighted"))))
+
 (defn highlight
   "Highlight Clojure source code."
-  [project & args]
-  (m/repl :read (fn [_ _] (read-and-highlight (clojure.java.io/reader *in*)))
-          :need-prompt #(do true)))
+  ([project] (highlight project "repl"))
+  ([project command & args]
+     (case command
+       "browse"
+       #_=> (browse-highlighted-code (first args))
+       "repl"
+       #_=> (m/repl :read (fn [_ _] (read-and-highlight (clojure.java.io/reader *in*)))
+                    :need-prompt #(do true))
+       #_else (throw (Exception. (str "unknown subcommand: " command))))))
