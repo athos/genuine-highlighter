@@ -5,7 +5,8 @@
             [genuine-highlighter.analyzer :as a]
             [genuine-highlighter.renderer :as r]
             [genuine-highlighter.converter :as c]
-            [genuine-highlighter.decoration-rules.terminal :as t]))
+            [genuine-highlighter.decoration-rules.terminal :as t]
+            [clojure.java.io :as io]))
 
 (defn- drop-proceeding-newlines [s]
   (clojure.string/replace s #"^\n+" ""))
@@ -41,6 +42,6 @@
        "browse"
        #_=> (browse-highlighted-code (first args))
        "repl"
-       #_=> (m/repl :read (fn [_ _] (read-and-highlight (clojure.java.io/reader *in*)))
+       #_=> (m/repl :read (fn [_ _] (read-and-highlight (io/reader *in*)))
                     :need-prompt #(do true))
        #_else (throw (Exception. (str "unknown subcommand: " command))))))
