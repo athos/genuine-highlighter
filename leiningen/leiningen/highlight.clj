@@ -6,6 +6,10 @@
             [genuine-highlighter.renderer :as r]
             [genuine-highlighter.converter :as c]
             [genuine-highlighter.decoration-rules.terminal :as t]
+            [compojure.core :refer [defroutes GET]]
+            [ring.adapter.jetty :as jetty]
+            [clojure.java.browse :as browse]
+            [clojure.string :as str]
             [clojure.java.io :as io]))
 
 (defn- drop-proceeding-newlines [s]
@@ -27,11 +31,20 @@
             (flush)
             (recur code'))))))
 
+(defroutes app
+  (GET "/:nsname" [nsname]
+    (let [filename (-> (#'clojure.core/root-resource nsname)
+                       (str/replace #"^/" "")
+                       (str ".clj"))]
+      (slurp filename))))
+
 (defn browse-highlighted-code [filename]
   (if filename
     (try
-      (print (hl/highlight t/colorful-symbols-rule (slurp filename)))
-      (flush))
+      (let [port (Integer/parseInt (get (System/getenv) "PORT" "8080"))
+            server (jetty/run-jetty app {:port port, :join? false})]
+        (browse/browse-url (str "http://localhost:" port "/" (str/replace filename #"/" "%2f")))
+        (.join server)))
     (throw (Exception. "specify namespace to be highlighted"))))
 
 (defn highlight
