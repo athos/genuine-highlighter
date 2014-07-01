@@ -1,5 +1,8 @@
 (ns leiningen.highlight
   (:require [clojure.main :as m]
+            [clojure.string :as str]
+            [clojure.java.io :as io]
+            [clojure.java.browse :as browse]
             [genuine-highlighter.core :as hl]
             [genuine-highlighter.parser :as p]
             [genuine-highlighter.analyzer :as a]
@@ -7,10 +10,7 @@
             [genuine-highlighter.converter :as c]
             [genuine-highlighter.decoration-rules.terminal :as t]
             [compojure.core :refer [defroutes GET]]
-            [ring.adapter.jetty :as jetty]
-            [clojure.java.browse :as browse]
-            [clojure.string :as str]
-            [clojure.java.io :as io]))
+            [ring.adapter.jetty :as jetty]))
 
 (defn- drop-proceeding-newlines [s]
   (clojure.string/replace s #"^\n+" ""))
