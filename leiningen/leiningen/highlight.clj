@@ -8,7 +8,8 @@
             [genuine-highlighter.analyzer :as a]
             [genuine-highlighter.renderer :as r]
             [genuine-highlighter.converter :as c]
-            [genuine-highlighter.decoration-rules.terminal :as t]
+            [genuine-highlighter.decoration-rules [terminal :as t]
+                                                  [html :as html]]
             [compojure.core :refer [defroutes GET]]
             [ring.adapter.jetty :as jetty]))
 
@@ -36,7 +37,8 @@
     (let [filename (-> (#'clojure.core/root-resource nsname)
                        (str/replace #"^/" "")
                        (str ".clj"))]
-      (slurp filename))))
+      (->> (hl/highlight html/colorful-symbols-rule (slurp filename))
+           (format "<pre>%s</pre>")))))
 
 (defn browse-highlighted-code [filename]
   (if filename
