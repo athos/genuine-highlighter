@@ -1,0 +1,75 @@
+.file {
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.file-code {
+    background-color: #fff;
+    border-collapse: separate;
+    width: 100%;
+}
+
+table {
+    border-spacing: 0;
+}
+
+td {
+    padding: 0;
+}
+
+pre {
+    margin-bottom: 0;
+    margin-top: 0;
+    font-family: Consolas,"Liberation Mono",Menlo,Courier,monospace;
+    font-size: 12px;
+}
+
+.line-nums {
+    padding:5px 0;
+    border: 1px solid #e5e5e5;
+    color: rgba(0, 0, 0, 0.3);
+    text-align: right;
+    vertical-align: top;
+    width: 1%;
+    font-family: Consolas,"Liberation Mono",Menlo,Courier,monospace;
+    font-size: 14px;
+}
+
+.line-nums span {
+    color: inherit;
+    display: block;
+    height: 18px;
+    line-height: 18px;
+    padding: 0 8px;
+    cursor: pointer;
+}
+
+.line-code {
+    line-height: 18px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    whitespace: nowrap;
+}
+
+.highlight {
+    background: none repeat scroll 0 0 #ffffff;
+}
+
+.macro {
+    font-weight: bold;
+}
+
+.special {
+    font-weight: bold;
+}
+
+.var {
+    color: #990000;
+    font-weight: bold;
+}
+
+.local {
+  color: teal;
+}

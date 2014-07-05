@@ -35,20 +35,38 @@
             (flush)
             (recur code'))))))
 
-(defn- html-template [body]
+(defn- html-template [nsname body]
   (hiccup/html5
     [:head
+      [:title nsname]
       [:link {:href "css/highlight.css", :rel "stylesheet", :type "text/css"}]]
     [:body
-      [:pre
-        body]]))
+      [:h1 nsname]
+      body]))
+
+(defn- render-html [nsname code]
+  (let [lines (str/split code #"\n")
+        num (count lines)]
+    (html-template nsname
+     `[:div.file
+       [:table.file-code
+        [:tbody
+         [:tr
+          [:td.line-nums
+           ~@(for [i (range 1 (inc num))]
+               [:span {:id (str \L i), :rel (str "#L" i)} i])]
+          [:td.line-code
+           [:div.highlight
+            [:pre
+             ~@(for [[i line] (map list (range 1 (inc num)) lines)]
+                 [:div.line {:id (str "LC" i)} line])]]]]]]])))
 
 (defn- handler [nsname]
   (let [filename (-> (#'clojure.core/root-resource nsname)
                      (str/replace #"^/" "")
                      (str ".clj"))]
     (->> (hl/highlight html/colorful-symbols-rule (slurp filename))
-         html-template)))
+         (render-html nsname))))
 
 (defroutes routes
   (GET "/:nsname" [nsname]
