@@ -40,7 +40,7 @@
       (->> (hl/highlight html/colorful-symbols-rule (slurp filename))
            (format "<pre>%s</pre>")))))
 
-(defn browse-highlighted-code [filename]
+(defn- browse-highlighted-code [filename]
   (if filename
     (try
       (let [port (Integer/parseInt (get (System/getenv) "PORT" "8080"))
