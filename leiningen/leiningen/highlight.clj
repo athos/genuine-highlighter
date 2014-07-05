@@ -13,7 +13,8 @@
             [compojure [core :refer [defroutes GET]]
                        [route :as route]]
             [ring.adapter.jetty :as jetty]
-            [ring.middleware.reload :refer [wrap-reload]]))
+            [ring.middleware.reload :refer [wrap-reload]]
+            [hiccup [page :as hiccup]]))
 
 (defn- drop-proceeding-newlines [s]
   (clojure.string/replace s #"^\n+" ""))
@@ -34,19 +35,13 @@
             (flush)
             (recur code'))))))
 
-(defn html-template [body]
-  (format "
-<!DOCTYPE html>
-<html>
-  <head>
-    <link href=\"css/highlight.css\" rel=\"stylesheet\" type=\"text/css\" />
-  </head>
-  <body>
-    <pre>
-%s
-    </pre>
-  </body>
-</html>" body))
+(defn- html-template [body]
+  (hiccup/html5
+    [:head
+      [:link {:href "css/highlight.css", :rel "stylesheet", :type "text/css"}]]
+    [:body
+      [:pre
+        body]]))
 
 (defroutes routes
   (GET "/:nsname" [nsname]
