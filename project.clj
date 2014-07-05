@@ -9,5 +9,6 @@
                  [compojure "1.1.8"]
                  [ring/ring-jetty-adapter "1.3.0"]
                  [hiccup "1.0.5"]]
+  :resource-paths ["resources"]
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.4"]]
                    :source-paths ["src" "dev" "examples"]}})
