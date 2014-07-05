@@ -10,8 +10,10 @@
             [genuine-highlighter.converter :as c]
             [genuine-highlighter.decoration-rules [terminal :as t]
                                                   [html :as html]]
-            [compojure.core :refer [defroutes GET]]
-            [ring.adapter.jetty :as jetty]))
+            [compojure [core :refer [defroutes GET]]
+                       [route :as route]]
+            [ring.adapter.jetty :as jetty]
+            [ring.middleware.reload :refer [wrap-reload]]))
 
 (defn- drop-proceeding-newlines [s]
   (clojure.string/replace s #"^\n+" ""))
@@ -32,13 +34,32 @@
             (flush)
             (recur code'))))))
 
-(defroutes app
+(defn html-template [body]
+  (format "
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href=\"css/highlight.css\" rel=\"stylesheet\" type=\"text/css\" />
+  </head>
+  <body>
+    <pre>
+%s
+    </pre>
+  </body>
+</html>" body))
+
+(defroutes routes
   (GET "/:nsname" [nsname]
     (let [filename (-> (#'clojure.core/root-resource nsname)
                        (str/replace #"^/" "")
                        (str ".clj"))]
       (->> (hl/highlight html/colorful-symbols-rule (slurp filename))
-           (format "<pre>%s</pre>")))))
+           html-template)))
+  (route/resources "/"))
+
+(def app
+  (-> routes
+      (wrap-reload '[leiningen.highlight])))
 
 (defn- browse-highlighted-code [filename]
   (if filename
