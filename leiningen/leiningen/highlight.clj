@@ -43,13 +43,16 @@
       [:pre
         body]]))
 
+(defn- handler [nsname]
+  (let [filename (-> (#'clojure.core/root-resource nsname)
+                     (str/replace #"^/" "")
+                     (str ".clj"))]
+    (->> (hl/highlight html/colorful-symbols-rule (slurp filename))
+         html-template)))
+
 (defroutes routes
   (GET "/:nsname" [nsname]
-    (let [filename (-> (#'clojure.core/root-resource nsname)
-                       (str/replace #"^/" "")
-                       (str ".clj"))]
-      (->> (hl/highlight html/colorful-symbols-rule (slurp filename))
-           html-template)))
+    (handler nsname))
   (route/resources "/"))
 
 (def app
