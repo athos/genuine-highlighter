@@ -10,7 +10,13 @@
                 (not (#{:whitespace :newline} (p/node-tag %))))
            content))
 
+(defn- essential-content [x]
+  (remove-whitespaces (p/node-content* x)))
+
 (defmulti ^:private convert* p/node-tag)
+
+(defmethod convert* :root [x]
+  (mapv convert* (essential-content x)))
 
 (defmethod convert* :symbol [x]
   (let [[maybe-ns _ maybe-name] (p/node-content* x)
@@ -37,13 +43,8 @@
 (defmethod convert* :set [x]
   (set (convert-seq x)))
 
-(defn- essential-content [x]
-  (remove-whitespaces (p/node-content* x)))
-
 (defn convert [root]
-  (some->> (essential-content root)
-           first
-           convert*))
+  (convert* root))
 
 (defn- convert-seq [x]
   (->> (essential-content x)
