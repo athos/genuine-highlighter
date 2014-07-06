@@ -49,22 +49,24 @@
            {m {:type :special :op op}})
          (extract-from-forms env args)))
 
-(defn- extract-from-seq [env [op :as seq]]
-  (if (special? seq)
-    (extract-from-special env seq)
-    (let [e (lookup env op)]
-      (if (or (var? e) (nil? e))
-        ;; op may be a macro or .method or Class. or Class/method
-        (let [expanded (macroexpand seq)]
-          (cond (= expanded seq)
-                #_=> (extract-from-forms env seq)
-                (var? e)
-                #_=> (apply conj {}
-                            (when-let [m (get-id op)]
-                              {m {:type :macro :macro e}})
-                            (extract* env expanded))
-                :else (extract* env expanded)))
-        (extract-from-forms env seq)))))
+(defn- extract-from-seq [env [maybe-op :as seq]]
+  (cond (special? seq)
+        #_=> (extract-from-special env seq)
+        (symbol? maybe-op)
+        #_=> (let [e (lookup env maybe-op)]
+               (if (or (var? e) (nil? e))
+                 ;; op may be a macro or .method or Class. or Class/method
+                 (let [expanded (macroexpand seq)]
+                   (cond (= expanded seq)
+                         #_=> (extract-from-forms env seq)
+                         (var? e)
+                         #_=> (apply conj {}
+                                     (when-let [m (get-id maybe-op)]
+                                       {m {:type :macro :macro e}})
+                                     (extract* env expanded))
+                         :else (extract* env expanded)))
+                 (extract-from-forms env seq)))
+        :else (extract-from-forms env seq)))
 
 (defn- extract* [env form]
   (cond (symbol? form)
