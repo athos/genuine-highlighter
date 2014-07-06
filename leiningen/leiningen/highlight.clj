@@ -65,7 +65,7 @@
   (let [filename (-> (#'clojure.core/root-resource nsname)
                      (str/replace #"^/" "")
                      (str ".clj"))]
-    (->> (hl/highlight html/colorful-symbols-rule (slurp filename))
+    (->> (hl/highlight html/colorful-symbols-rule (slurp (io/resource filename)))
          (render-html nsname))))
 
 (defroutes routes
