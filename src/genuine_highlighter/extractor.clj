@@ -26,7 +26,7 @@
      new . let* fn* loop* recur letfn* case* reify* deftype* clojure.core/import*})
 
 (defn- special? [[op]]
-  (specials op))
+  (boolean (specials op)))
 
 (defn- extract-from-symbol [env sym]
   (or (when-let [m (get-id sym)]
