@@ -7,7 +7,7 @@
 
 (defn- remove-whitespaces [content]
   (filterv #(or (not (instance? Node %))
-                (not (#{:whitespace :newline} (p/node-tag %))))
+                (not (#{:whitespace :newline :comment :discard} (p/node-tag %))))
            content))
 
 (defn- essential-content [x]
@@ -18,6 +18,12 @@
 (defmethod convert* :root [x]
   (mapv convert* (essential-content x)))
 
+(defmethod convert* :nil [x]
+  nil)
+
+(defmethod convert* :boolean [x]
+  ({"true" true, "false" false} x))
+
 (defmethod convert* :symbol [x]
   (let [[maybe-ns _ maybe-name] (p/node-content* x)
         sym (if maybe-name
@@ -26,8 +32,47 @@
     (with-meta sym
       {::id (:id x)})))
 
+(defmethod convert* :keyword [x]
+  (let [[colon maybe-ns _ maybe-name] (p/node-content* x)]
+    (cond maybe-name
+          #_=> (keyword (p/node-content maybe-ns) (p/node-content maybe-name))
+          (= colon "::")
+          #_=> (keyword (name (ns-name *ns*)) (p/node-content maybe-ns))
+          :else (keyword (p/node-content maybe-ns)))))
+
 (defmethod convert* :number [x]
   (read-string (p/node-content x)))
+
+(defmethod convert* :char [x]
+  (read-string (p/node-content x)))
+
+(defmethod convert* :string [x]
+  (let [[_ s _] (p/node-content* x)]
+    s))
+
+(defmethod convert* :regex [x]
+  (let [[_ _ s _] (p/node-content* x)]
+    (re-pattern s)))
+
+(defmethod convert* :fn [x])
+
+(defmethod convert* :meta [x])
+
+(defmethod convert* :var [x])
+
+(defmethod convert* :deref [x])
+
+(defmethod convert* :quote [x])
+
+(defmethod convert* :syntax-quote [x])
+
+(defmethod convert* :unquote [x])
+
+(defmethod convert* :unquote-splicing [x])
+
+(defmethod convert* :eval [x])
+
+(defmethod convert* :reader-literal [x])
 
 (declare convert-seq)
 
