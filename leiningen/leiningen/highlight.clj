@@ -7,7 +7,6 @@
             [genuine-highlighter.parsing :as p]
             [genuine-highlighter.analyzer :as a]
             [genuine-highlighter.renderer :as r]
-            [genuine-highlighter.converter :as c]
             [genuine-highlighter.decoration-rules [terminal :as t]
                                                   [html :as html]]
             [compojure [core :refer [defroutes GET]]
