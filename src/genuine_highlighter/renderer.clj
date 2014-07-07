@@ -1,5 +1,5 @@
 (ns genuine-highlighter.renderer
-  (:require [genuine-highlighter.parser :as p]))
+  (:require [genuine-highlighter.parsing :as p]))
 
 (defn- maybe [x & args]
   (when-not (nil? x)

@@ -1,5 +1,5 @@
 (ns genuine-highlighter.core
-  (:require [genuine-highlighter [parser :as parser]
+  (:require [genuine-highlighter [parsing :as p]
                                  [analyzer :as analyzer]
                                  [renderer :as renderer]]
             [clojure.java.io :as io]
@@ -9,9 +9,9 @@
 (defn highlight
   ([rule s] (highlight rule s nil))
   ([rule s unfinished]
-     (let [ast (parser/parse s)]
-       (cond (parser/unfinished? ast)
+     (let [ast (p/parse s)]
+       (cond (p/unfinished? ast)
              #_=> unfinished
-             (parser/unexpected? ast)
+             (p/unexpected? ast)
              #_=> (throw (ex-info "unexpected" {::type :unexpected :data s}))
              :else (renderer/render rule (analyzer/analyze ast))))))

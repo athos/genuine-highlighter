@@ -1,4 +1,4 @@
-(ns genuine-highlighter.parser
+(ns genuine-highlighter.parsing
   (:require [net.cgrand.parsley :as p]
             [net.cgrand.sjacket.parser :as s]))
 

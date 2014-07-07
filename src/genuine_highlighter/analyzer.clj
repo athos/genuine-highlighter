@@ -1,7 +1,7 @@
 (ns genuine-highlighter.analyzer
   (:require [clojure.walk :refer [postwalk]]
-            [genuine-highlighter.converter :refer [convert]]
-            [genuine-highlighter.extractor :refer [extract]])
+            [genuine-highlighter.conversion :refer [convert]]
+            [genuine-highlighter.extraction :refer [extract]])
   (:import net.cgrand.parsley.Node))
 
 ;;

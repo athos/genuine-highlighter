@@ -1,5 +1,5 @@
-(ns genuine-highlighter.converter
-  (:require [genuine-highlighter.parser :as p])
+(ns genuine-highlighter.conversion
+  (:require [genuine-highlighter.parsing :as p])
   (:import net.cgrand.parsley.Node))
 
 (defn get-id [x]

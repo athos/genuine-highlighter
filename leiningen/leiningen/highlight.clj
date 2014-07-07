@@ -4,7 +4,7 @@
             [clojure.java.io :as io]
             [clojure.java.browse :as browse]
             [genuine-highlighter.core :as hl]
-            [genuine-highlighter.parser :as p]
+            [genuine-highlighter.parsing :as p]
             [genuine-highlighter.analyzer :as a]
             [genuine-highlighter.renderer :as r]
             [genuine-highlighter.converter :as c]
