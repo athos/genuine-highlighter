@@ -57,7 +57,8 @@
           [:td.line-code
            [:div.highlight
             [:pre
-             ~@(for [[i line] (map list (range 1 (inc num)) lines)]
+             ~@(for [[i line] (map list (range 1 (inc num)) lines)
+                     :let [line (if (= line "") "<br>" line)]]
                  [:div.line {:id (str "LC" i)} line])]]]]]]])))
 
 (defn- handler [nsname]
