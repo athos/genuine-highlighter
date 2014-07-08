@@ -58,17 +58,30 @@
 
 (defmethod convert* :meta [x])
 
-(defmethod convert* :var [x])
+(defmethod convert* :var [x]
+  (let [[_ maybe-ns _ maybe-name] (p/node-content* x)
+        sym (if maybe-name
+              (symbol (convert* maybe-ns) (p/node-content maybe-name))
+              (symbol (convert* maybe-ns)))]
+    (list 'var sym)))
 
-(defmethod convert* :deref [x])
+(defn- wrap [sym node]
+  (let [[_ v] (p/node-content* node)]
+    (list sym (convert* v))))
 
-(defmethod convert* :quote [x])
+(defmethod convert* :deref [x]
+  (wrap 'clojure.core/deref x))
+
+(defmethod convert* :quote [x]
+  (wrap 'quote x))
 
 (defmethod convert* :syntax-quote [x])
 
-(defmethod convert* :unquote [x])
+(defmethod convert* :unquote [x]
+  (wrap 'clojure.core/unquote x))
 
-(defmethod convert* :unquote-splicing [x])
+(defmethod convert* :unquote-splicing [x]
+  (wrap 'clojure.core/unquote-splicing x))
 
 (defmethod convert* :eval [x])
 
