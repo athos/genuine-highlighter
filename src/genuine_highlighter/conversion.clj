@@ -56,7 +56,17 @@
 
 (defmethod convert* :fn [x])
 
-(defmethod convert* :meta [x])
+(defmethod convert* :meta [x]
+  (let [[_ meta-node form-node] (essential-content x)
+        meta (convert* meta-node)
+        meta (cond (keyword? meta) {meta true}
+                   (or (symbol? meta)
+                       (string? meta))
+                   #_=> {:tag meta}
+                   (map? meta) meta
+                   ; FIXME: otherwise throw an exception
+                   )]
+    (vary-meta (convert* form-node) conj meta)))
 
 (defmethod convert* :var [x]
   (let [[_ maybe-ns _ maybe-name] (essential-content x)
