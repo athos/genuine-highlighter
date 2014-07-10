@@ -59,14 +59,14 @@
 (defmethod convert* :meta [x])
 
 (defmethod convert* :var [x]
-  (let [[_ maybe-ns _ maybe-name] (p/node-content* x)
+  (let [[_ maybe-ns _ maybe-name] (essential-content x)
         sym (if maybe-name
               (symbol (convert* maybe-ns) (p/node-content maybe-name))
               (symbol (convert* maybe-ns)))]
     (list 'var sym)))
 
 (defn- wrap [sym node]
-  (let [[_ v] (p/node-content* node)]
+  (let [[_ v] (essential-content node)]
     (list sym (convert* v))))
 
 (defmethod convert* :deref [x]
