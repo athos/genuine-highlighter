@@ -47,8 +47,7 @@
   (read-string (p/node-content x)))
 
 (defmethod convert* :string [x]
-  (let [[_ s _] (p/node-content* x)]
-    s))
+  (read-string (apply str (p/node-content* x))))
 
 (defmethod convert* :regex [x]
   (let [[_ _ s _] (p/node-content* x)]
