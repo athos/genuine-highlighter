@@ -22,7 +22,7 @@
   nil)
 
 (defmethod convert* :boolean [x]
-  ({"true" true, "false" false} x))
+  ({"true" true, "false" false} (p/node-content x)))
 
 (defmethod convert* :symbol [x]
   (let [[maybe-ns _ maybe-name] (p/node-content* x)
