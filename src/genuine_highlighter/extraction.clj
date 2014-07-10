@@ -89,10 +89,22 @@
 ;; Implementation of etraction methods
 ;; for each special form (related to bindings)
 ;;
+(defn- collect-symbols [ret x]
+  (cond (symbol? x) (conj ret x)
+        (map? x) (-> ret
+                     (collect-symbols (keys x))
+                     (collect-symbols (vals x)))
+        (coll? x) (reduce collect-symbols ret x)
+        :else ret))
+
 (defmethod extract-from-special 'quote [env [op arg]]
   (apply conj {}
          (when-let [m (get-id op)]
-           {m {:type :special :op op}})))
+           {m {:type :special :op op}})
+         (for [sym (collect-symbols [] arg)
+               :let [m (get-id sym)]
+               :when m]
+           {m {:type :quote}})))
 
 (defmethod extract-from-special 'def [env [op name expr]]
   (apply conj {}
