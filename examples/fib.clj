@@ -8,3 +8,5 @@
     (if (= n 0)
       a
       (recur (dec n) b (+ a b)))))
+
+(fib 10)
