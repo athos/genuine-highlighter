@@ -22,10 +22,9 @@
 (defn analyze [root & {:keys [ns suppress-eval?]}]
   (let [ns (or ns *ns*)
         sexps (convert root)
-        info (reduce (fn [info sexp]
-                       (when-not suppress-eval?
-                         (eval sexp))
-                       (merge info (extract ns sexp)))
-                     {}
-                     sexps)]
+        ext (fn [info sexp]
+              (when-not suppress-eval?
+                (eval sexp))
+              (merge info (extract ns sexp)))
+        info (reduce ext {} sexps)]
     (annotate root info)))
