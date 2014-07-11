@@ -1,7 +1,7 @@
 (ns genuine-highlighter.decoration-rules.html)
 
 (defn ^:private colorful-symbol [x v]
-  (let [type (name (:type (:usage x)))]
+  (when-let [type (some-> x :usage :type name)]
     (format "<span class=\"%s\">%s</span>" type v)))
 
 (def colorful-symbols-rule
