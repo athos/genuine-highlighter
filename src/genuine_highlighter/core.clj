@@ -6,12 +6,11 @@
             [clojure.string :as str])
   (:import [java.io BufferedReader]))
 
-(defn highlight
-  ([rule s] (highlight rule s nil))
-  ([rule s unfinished]
-     (let [ast (p/parse s)]
-       (cond (p/unfinished? ast)
-             #_=> unfinished
-             (p/unexpected? ast)
-             #_=> (throw (ex-info "unexpected" {::type :unexpected :data s}))
-             :else (renderer/render rule (analyzer/analyze ast))))))
+(defn highlight [rule s & {:keys [ns unfinished suppress-eval?]}]
+  (let [ast (p/parse s)]
+    (cond (p/unfinished? ast)
+          #_=> unfinished
+          (p/unexpected? ast)
+          #_=> (throw (ex-info "unexpected" {::type :unexpected :data s}))
+          :else (->> (analyzer/analyze ast :ns ns :suppress-eval? suppress-eval?)
+                     (renderer/render rule)))))

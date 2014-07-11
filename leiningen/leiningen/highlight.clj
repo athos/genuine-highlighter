@@ -22,7 +22,7 @@
   (loop [code ""]
     (let [line (.readLine in)
           code' (str code \newline line)]
-      (if-let [result (hl/highlight t/colorful-symbols-rule code')]
+      (if-let [result (hl/highlight t/colorful-symbols-rule code' :suppress-eval? true)]
         (let [result (->> (clojure.string/split result #"\n")
                           (drop-while #(= "" %))
                           (map #(str "  #_== " %))

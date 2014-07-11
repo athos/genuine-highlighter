@@ -19,13 +19,13 @@
 ;;
 ;; Entry point
 ;;
-(defn analyze
-  ([root] (analyze *ns* root))
-  ([ns root]
-     (let [sexps (convert root)
-           info (reduce (fn [info sexp]
-                          (eval sexp)
-                          (merge info (extract ns sexp)))
-                        {}
-                        sexps)]
-       (annotate root info))))
+(defn analyze [root & {:keys [ns suppress-eval?]}]
+  (let [ns (or ns *ns*)
+        sexps (convert root)
+        info (reduce (fn [info sexp]
+                       (when-not suppress-eval?
+                         (eval sexp))
+                       (merge info (extract ns sexp)))
+                     {}
+                     sexps)]
+    (annotate root info)))
