@@ -173,7 +173,10 @@
    (extract-from-special env `(fn* nil ~clause ~@clauses))]
   [(_ fname & clauses)
    {fname {:type :local :usage :def}}
-   (extract-from-clauses env clauses)])
+   (let [env' (if fname
+                (extend env fname {:type :local :usage :def})
+                env)]
+     (extract-from-clauses env' clauses))])
 
 (defmethod extract-from-special 'letfn* [env [op & more]])
 
