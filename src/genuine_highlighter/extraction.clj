@@ -178,7 +178,21 @@
                 env)]
      (extract-from-clauses env' clauses))])
 
-(defmethod extract-from-special 'letfn* [env [op & more]])
+(defn- extract-from-letfn-bindings [env bindings]
+  (let [bindings' (partition 2 bindings)
+        fnames (map first bindings')
+        fns (map second bindings')
+        env' (reduce #(extend %1 %2 {:type :local :usage :def}) env fnames)
+        info (->> fnames
+                  (map #(when-let [m (get-id %)] [m {:type :local :usage :def}]))
+                  (into {}))]
+    [(reduce #(merge %1 (extract* env' %2)) info fns)
+     env']))
+
+(def-special-extractor letfn*
+  [(_ bindings & body)
+   (let [[info env] (extract-from-letfn-bindings env bindings)]
+     (merge info (extract-from-forms env body)))])
 
 (defmethod extract-from-special 'catch [env [op exn e & body]])
 
