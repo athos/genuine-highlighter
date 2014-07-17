@@ -10,3 +10,15 @@
       (recur (dec n) b (+ a b)))))
 
 (fib 10)
+
+(defn even? [n]
+  (letfn
+     [(even? [n]
+        (or (= n 0)
+            (odd? (dec n))))
+      (odd? [n]
+        (and (not= n 0)
+             (even? (dec n))))]
+    (even? n)))
+
+(even? 10)
