@@ -1,6 +1,7 @@
 (ns genuine-highlighter.extraction
   (:refer-clojure :exclude [extend])
-  (:require [genuine-highlighter.conversion :refer [get-id]]))
+  (:require [genuine-highlighter.conversion :refer [get-id]]
+            [clojure.core.match :refer [match]]))
 
 ;;
 ;; Environment
@@ -88,6 +89,25 @@
 ;; Implementation of etraction methods
 ;; for each special form (related to bindings)
 ;;
+
+(defmacro def-special-extractor [op & clauses]
+  `(defmethod extract-from-special '~op [~'env ~'form]
+     (match ~'form
+       ~@(->> (for [[pat maybe-map maybe-expr] clauses
+                    :let [map (if (map? maybe-map) maybe-map {})
+                          expr (if (map? maybe-map) maybe-expr maybe-map)]]
+                 [`(~(vec pat) :seq)
+                  `(apply conj {}
+                          (let [op# (first ~'form)]
+                            (when-let [m# (get-id op#)]
+                              {m# {:type :special :op op#}}))
+                          ~@(for [[name usage] map]
+                              `(when-let [m# (and (symbol? ~name) (get-id ~name))]
+                                 {m# ~usage}))
+                          ~expr)])
+              (apply concat))
+       :else nil)))
+
 (defn- collect-symbols [ret x]
   (cond (symbol? x) (conj ret x)
         (map? x) (-> ret
