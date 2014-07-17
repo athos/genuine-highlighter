@@ -116,22 +116,17 @@
         (coll? x) (reduce collect-symbols ret x)
         :else ret))
 
-(defmethod extract-from-special 'quote [env [op arg]]
-  (apply conj {}
-         (when-let [m (get-id op)]
-           {m {:type :special :op op}})
-         (for [sym (collect-symbols [] arg)
-               :let [m (get-id sym)]
-               :when m]
-           {m {:type :quote}})))
+(def-special-extractor quote
+  [(_ sexp)
+   (for [sym (collect-symbols [] sexp)
+         :let [m (get-id sym)]
+         :when m]
+     {m {:type :quote}})])
 
-(defmethod extract-from-special 'def [env [op name expr]]
-  (apply conj {}
-         (when-let [m (get-id op)]
-           {m {:type :special :op op}})
-         (when-let [m (get-id name)]
-           {m {:type :var :usage :def :name name}})
-         (extract* env expr)))
+(def-special-extractor def
+  [(_ name expr)
+   {name {:type :var :usage :def :name name}}
+   (extract* env expr)])
 
 (defn- extract-from-bindings [env bindings]
   (loop [env env, [[name expr] & more :as bindings] (partition 2 bindings), ret {}]
@@ -143,19 +138,15 @@
                more
                (conj ret (if m {m e} {}) (extract* env expr)))))))
 
-(defmethod extract-from-special 'let* [env [op bindings & body]]
-  (apply conj {}
-         (when-let [m (get-id op)]
-           {m {:type :special :op op}})
-         (let [[info env] (extract-from-bindings env bindings)]
-           (merge info (extract-from-forms env body)))))
+(def-special-extractor let*
+  [(_ bindings & body)
+   (let [[info env] (extract-from-bindings env bindings)]
+     (merge info (extract-from-forms env body)))])
 
-(defmethod extract-from-special 'loop* [env [op bindings & body]]
-  (apply conj {}
-         (when-let [m (get-id op)]
-           {m {:type :special :op op}})
-         (let [[info env] (extract-from-bindings env bindings)]
-           (merge info (extract-from-forms env body)))))
+(def-special-extractor loop*
+  [(_ bindings & body)
+   (let [[info env] (extract-from-bindings env bindings)]
+     (merge info (extract-from-forms env body)))])
 
 (defn- extract-from-args [env args]
   (loop [env env, [name & more :as args] args, ret {}]
@@ -173,21 +164,16 @@
          (merge info (extract-from-forms env body)))
        (into {})))
 
-(defmethod extract-from-special 'fn* [env [op & more]]
-  (let [maybe-name (first more)
-        fname (if (symbol? maybe-name) maybe-name nil)
-        clauses (if fname (rest more) more)
-        clauses (if (vector? (first clauses))
-                  (list clauses)
-                  clauses)
-        e {:type :local :usage :def}
-        env (if fname (extend env fname e) env)]
-    (apply conj {}
-           (when-let [m (get-id op)]
-             {m {:type :special :op op}})
-           (when-let [m (get-id fname)]
-             {m e})
-           (extract-from-clauses env clauses))))
+(def-special-extractor fn*
+  [(_ (args :guard vector?) & body)
+   (extract-from-special env `(fn* (~args ~@body)))]
+  [(_ (fname :guard symbol?) (args :guard vector?) & body)
+   (extract-from-special env `(fn* fname (~args ~@body)))]
+  [(_ (clause :guard seq?) & clauses)
+   (extract-from-special env `(fn* nil ~clause ~@clauses))]
+  [(_ fname & clauses)
+   {fname {:type :local :usage :def}}
+   (extract-from-clauses env clauses)])
 
 (defmethod extract-from-special 'letfn* [env [op & more]])
 
