@@ -1,7 +1,6 @@
 (ns genuine-highlighter.extraction
   (:refer-clojure :exclude [extend])
-  (:require [clojure.walk :refer [postwalk]]
-            [genuine-highlighter.conversion :refer [get-id]]))
+  (:require [genuine-highlighter.conversion :refer [get-id]]))
 
 ;;
 ;; Environment
