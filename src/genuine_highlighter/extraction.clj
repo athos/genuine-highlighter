@@ -37,6 +37,10 @@
                 :else nil)))
       {}))
 
+(defn- assoc-if-marked-symbol [map sym val]
+  (when-let [id (get-id sym)]
+    (assoc map id val)))
+
 (declare extract*)
 
 (defn- extract-from-forms [env forms]
@@ -44,10 +48,9 @@
 
 (defmulti ^:private extract-from-special (fn [env [op]] op))
 (defmethod extract-from-special :default [env [op & args]]
-  (apply conj {}
-         (when-let [m (get-id op)]
-           {m {:type :special :op op}})
-         (extract-from-forms env args)))
+  (-> {}
+      (assoc-if-marked-symbol op {:type :special :op op})
+      (merge (extract-from-forms env args))))
 
 (defn- extract-from-seq [env [maybe-op :as seq]]
   (cond (special? seq)
@@ -60,10 +63,9 @@
                    (cond (= expanded seq)
                          #_=> (extract-from-forms env seq)
                          (var? e)
-                         #_=> (apply conj {}
-                                     (when-let [m (get-id maybe-op)]
-                                       {m {:type :macro :macro e}})
-                                     (extract* env expanded))
+                         #_=> (-> {}
+                                  (assoc-if-marked-symbol maybe-op {:type :macro :macro e})
+                                  (merge (extract* env expanded)))
                          :else (extract* env expanded)))
                  (extract-from-forms env seq)))
         :else (extract-from-forms env seq)))
@@ -97,14 +99,13 @@
                     :let [map (if (map? maybe-map) maybe-map {})
                           expr (if (map? maybe-map) maybe-expr maybe-map)]]
                  [`(~(vec pat) :seq)
-                  `(apply conj {}
-                          (let [op# (first ~'form)]
-                            (when-let [m# (get-id op#)]
-                              {m# {:type :special :op op#}}))
-                          ~@(for [[name usage] map]
-                              `(when-let [m# (and (symbol? ~name) (get-id ~name))]
-                                 {m# ~usage}))
-                          ~expr)])
+                  `(let [op# (first ~'form)]
+                     (-> {}
+                         (assoc-if-marked-symbol op# {:type :special :op op#})
+                         ~@(for [[name usage] map]
+                             `(cond-> (symbol? ~name)
+                                      (assoc-if-marked-symbol ~name ~usage)))
+                         (merge ~expr)))])
               (apply concat))
        :else nil)))
 
@@ -118,10 +119,9 @@
 
 (def-special-extractor quote
   [(_ sexp)
-   (for [sym (collect-symbols [] sexp)
-         :let [m (get-id sym)]
-         :when m]
-     {m {:type :quote}})])
+   (->> sexp
+        (collect-symbols [])
+        (reduce #(assoc-if-marked-symbol %1 %2 {:type :quote}) {}))])
 
 (def-special-extractor def
   [(_ name expr)
@@ -132,11 +132,11 @@
   (loop [env env, [[name expr] & more :as bindings] (partition 2 bindings), ret {}]
     (if (empty? bindings)
       [ret env]
-      (let [m (get-id name)
-            e {:type :local :usage :def}]
+      (let [e {:type :local :usage :def}]
         (recur (extend env name e)
                more
-               (conj ret (if m {m e} {}) (extract* env expr)))))))
+               (merge (assoc-if-marked-symbol ret name e)
+                      (extract* env expr)))))))
 
 (def-special-extractor let*
   [(_ bindings & body)
@@ -152,11 +152,10 @@
   (loop [env env, [name & more :as args] args, ret {}]
     (if (empty? args)
       [ret env]
-      (let [m (get-id name)
-            e {:type :local :usage :def}]
+      (let [e {:type :local :usage :def}]
         (recur (extend env name e)
                more
-               (if m (assoc ret m e) ret))))))
+               (assoc-if-marked-symbol ret name e))))))
 
 (defn- extract-from-clauses [env clauses]
   (->> (for [[args & body] clauses
@@ -183,9 +182,9 @@
         fnames (map first bindings')
         fns (map second bindings')
         env' (reduce #(extend %1 %2 {:type :local :usage :def}) env fnames)
-        info (->> fnames
-                  (map #(when-let [m (get-id %)] [m {:type :local :usage :def}]))
-                  (into {}))]
+        info (reduce #(assoc-if-marked-symbol %1 %2 {:type :local :usage :def})
+                     {}
+                     fnames)]
     [(reduce #(merge %1 (extract* env' %2)) info fns)
      env']))
 
