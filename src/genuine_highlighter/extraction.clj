@@ -199,7 +199,23 @@
 
 (defmethod extract-from-special '. [env [op target field-or-method]])
 
-(defmethod extract-from-special 'case* [env form])
+(defn- extract-from-case-map [env map]
+  (->> (for [[_ [test then]] map]
+         (-> (extract* env then)
+             (cond-> (symbol? test)
+                     (assoc-if-marked-symbol test {:type :quote})
+                     (seq? test)
+                     (as-> ret
+                           (reduce #(assoc-if-marked-symbol %1 %2 {:type :quote})
+                                   ret
+                                   (collect-symbols [] test))))))
+       (into {})))
+
+(def-special-extractor case*
+  [(_ expr shift mask default case-map table-type test-type & skip-check)
+   (merge (extract* env expr)
+          (extract* env default)
+          (extract-from-case-map env case-map))])
 
 (defmethod extract-from-special 'reify* [env form])
 
