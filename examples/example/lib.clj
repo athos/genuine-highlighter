@@ -1,3 +1,5 @@
+(ns example.lib)
+
 (defn fib [n]
   (case n
     (0 1) 1
