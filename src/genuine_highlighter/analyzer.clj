@@ -24,7 +24,8 @@
         sexps (convert root)
         ext (fn [info sexp]
               (when-not suppress-eval?
-                (eval sexp))
+                (binding [*ns* ns]
+                  (eval sexp)))
               (merge info (extract ns sexp)))
         info (reduce ext {} sexps)]
     (annotate root info)))
