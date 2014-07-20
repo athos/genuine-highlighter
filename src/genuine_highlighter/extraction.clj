@@ -204,7 +204,11 @@
    {class {:type :class :class (lookup env class)}}
    (extract-from-forms env args)])
 
-(defmethod extract-from-special '. [env [op target field-or-method]])
+(def-special-extractor .
+  [(_ class-or-obj field-or-method & args)
+   {field-or-method {:type :field-or-method :name field-or-method}}
+   (merge (extract* env class-or-obj)
+          (extract-from-forms env args))])
 
 (defn- extract-from-case-map [env map]
   (->> (for [[_ [test then]] map]
