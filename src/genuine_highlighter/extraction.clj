@@ -199,7 +199,10 @@
     name {:type :local :usage :def}}
    (extract-from-forms (extend env name {:type :local :usage :def}) body)])
 
-(defmethod extract-from-special 'new [env [op class & args]])
+(def-special-extractor new
+  [(_ class & args)
+   {class {:type :class :class (lookup env class)}}
+   (extract-from-forms env args)])
 
 (defmethod extract-from-special '. [env [op target field-or-method]])
 
