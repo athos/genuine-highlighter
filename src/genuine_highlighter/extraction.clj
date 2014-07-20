@@ -193,7 +193,11 @@
    (let [[info env] (extract-from-letfn-bindings env bindings)]
      (merge info (extract-from-forms env body)))])
 
-(defmethod extract-from-special 'catch [env [op exn e & body]])
+(def-special-extractor catch
+  [(_ class name & body)
+   {class {:type :class :class (lookup env class)}
+    name {:type :local :usage :def}}
+   (extract-from-forms (extend env name {:type :local :usage :def}) body)])
 
 (defmethod extract-from-special 'new [env [op class & args]])
 
