@@ -228,6 +228,18 @@
           (extract* env default)
           (extract-from-case-map env case-map))])
 
-(defmethod extract-from-special 'reify* [env form])
+(defn- extract-from-methods [env methods]
+  (->> (for [[mname args & body] methods
+             :let [e {:type :local :usage :def}]]
+         (-> {}
+             (assoc-if-marked-symbol mname {:type :member :name mname})
+             (as-> info (reduce #(assoc-if-marked-symbol %1 %2 e) info args))
+             (merge (extract-from-forms (reduce #(extend %1 %2 e) env args) body))))
+       (into {})))
+
+(def-special-extractor reify*
+  [(_ interfaces & methods)
+   (merge (extract-from-forms env interfaces)
+          (extract-from-methods env methods))])
 
 (defmethod extract-from-special 'deftype* [env form])
