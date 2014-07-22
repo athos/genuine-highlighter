@@ -206,7 +206,7 @@
 
 (def-special-extractor .
   [(_ class-or-obj field-or-method & args)
-   {field-or-method {:type :field-or-method :name field-or-method}}
+   {field-or-method {:type :member :name field-or-method}}
    (merge (extract* env class-or-obj)
           (extract-from-forms env args))])
 
