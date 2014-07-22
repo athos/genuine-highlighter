@@ -38,8 +38,9 @@
       {}))
 
 (defn- assoc-if-marked-symbol [map sym val]
-  (when-let [id (get-id sym)]
-    (assoc map id val)))
+  (if-let [id (get-id sym)]
+    (assoc map id val)
+    map))
 
 (declare extract*)
 
