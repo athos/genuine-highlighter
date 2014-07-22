@@ -224,7 +224,7 @@
          (-> (extract* env then)
              (cond-> (symbol? test)
                      (assoc-if-marked-symbol test {:type :quote})
-                     (seq? test)
+                     (coll? test)
                      (as-> ret
                            (reduce #(assoc-if-marked-symbol %1 %2 {:type :quote})
                                    ret
