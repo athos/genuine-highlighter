@@ -18,6 +18,9 @@
 (defn- extend [env n v]
   (assoc-in env [:locals n] v))
 
+(defn- extend-with-seq [env v seq]
+  (reduce #(extend %1 %2 (if (fn? v) (v %2) v)) env seq))
+
 ;;
 ;; Extraction
 ;;
@@ -41,6 +44,9 @@
   (if-let [id (get-id sym)]
     (assoc map id val)
     map))
+
+(defn- assoc-each [map val seq]
+  (reduce #(assoc-if-marked-symbol %1 %2 (if (fn? val) (val %2) val)) map seq))
 
 (declare extract*)
 
