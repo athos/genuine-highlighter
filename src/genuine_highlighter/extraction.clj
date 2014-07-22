@@ -87,6 +87,8 @@
         (map? form)
         #_=> (merge (extract-from-forms env (keys form))
                     (extract-from-forms env (vals form)))
+        (set? form)
+        #_=> (extract-from-forms env form)
         :else {}))
 
 (defn extract
