@@ -249,4 +249,13 @@
    (merge (extract-from-forms env interfaces)
           (extract-from-methods env methods))])
 
-(defmethod extract-from-special 'deftype* [env form])
+(def-special-extractor deftype*
+  [(_ tagname classname fields :implements interfaces & methods)
+   {tagname {:type :class :class (lookup env tagname)}
+    classname {:type :class :class (lookup env classname)}}
+   (-> {}
+       (assoc-each (fn [field] {:type :field :name field}) fields)
+       (assoc-each (fn [if] {:type :class :class (lookup env if)}) interfaces)
+       (as-> info
+         (let [env' (extend-with-seq env (fn [field] {:type :field :name field}) fields)]
+           (merge info (extract-from-methods env' methods)))))])
