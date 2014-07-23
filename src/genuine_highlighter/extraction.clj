@@ -130,7 +130,7 @@
   [(_ sexp)
    (->> sexp
         (collect-symbols [])
-        (reduce #(assoc-if-marked-symbol %1 %2 {:type :quote}) {}))])
+        (assoc-each {} {:type :quote}))])
 
 (def-special-extractor def
   [(_ name expr)
@@ -190,10 +190,8 @@
   (let [bindings' (partition 2 bindings)
         fnames (map first bindings')
         fns (map second bindings')
-        env' (reduce #(extend %1 %2 {:type :local :usage :def}) env fnames)
-        info (reduce #(assoc-if-marked-symbol %1 %2 {:type :local :usage :def})
-                     {}
-                     fnames)]
+        env' (extend-with-seq env {:type :local :usage :def} fnames)
+        info (assoc-each {} {:type :local :usage :def} fnames)]
     [(reduce #(merge %1 (extract* env' %2)) info fns)
      env']))
 
@@ -225,10 +223,7 @@
              (cond-> (symbol? test)
                      (assoc-if-marked-symbol test {:type :quote})
                      (coll? test)
-                     (as-> ret
-                           (reduce #(assoc-if-marked-symbol %1 %2 {:type :quote})
-                                   ret
-                                   (collect-symbols [] test))))))
+                     (assoc-each {:type :quote} (collect-symbols [] test)))))
        (into {})))
 
 (def-special-extractor case*
@@ -240,10 +235,9 @@
 (defn- extract-from-methods [env methods]
   (->> (for [[mname args & body] methods
              :let [e {:type :local :usage :def}]]
-         (-> {}
-             (assoc-if-marked-symbol mname {:type :member :name mname})
-             (as-> info (reduce #(assoc-if-marked-symbol %1 %2 e) info args))
-             (merge (extract-from-forms (reduce #(extend %1 %2 e) env args) body))))
+         (merge (assoc-if-marked-symbol {} mname {:type :member :name mname})
+                (assoc-each {} e args)
+                (extract-from-forms (extend-with-seq env e args) body)))
        (into {})))
 
 (def-special-extractor reify*
