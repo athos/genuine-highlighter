@@ -128,9 +128,7 @@
 
 (def-special-extractor quote
   [(_ sexp)
-   (->> sexp
-        (collect-symbols [])
-        (assoc-each {} {:type :quote}))])
+   (assoc-each {} {:type :quote} (collect-symbols [] sexp))])
 
 (def-special-extractor def
   [(_ name expr)
@@ -141,11 +139,10 @@
   (loop [env env, [[name expr] & more :as bindings] (partition 2 bindings), ret {}]
     (if (empty? bindings)
       [ret env]
-      (let [e {:type :local :usage :def}]
-        (recur (extend env name)
-               more
-               (merge (assoc-if-marked-symbol ret name e)
-                      (extract* env expr)))))))
+      (recur (extend env name)
+             more
+             (merge (assoc-if-marked-symbol ret name {:type :local :usage :def})
+                    (extract* env expr))))))
 
 (def-special-extractor let*
   [(_ bindings & body)
@@ -161,10 +158,9 @@
   (loop [env env, [name & more :as args] args, ret {}]
     (if (empty? args)
       [ret env]
-      (let [e {:type :local :usage :def}]
-        (recur (extend env name)
-               more
-               (assoc-if-marked-symbol ret name e))))))
+      (recur (extend env name)
+             more
+             (assoc-if-marked-symbol ret name {:type :local :usage :def})))))
 
 (defn- extract-from-clauses [env clauses]
   (->> (for [[args & body] clauses
@@ -181,10 +177,7 @@
    (extract-from-special env `(fn* nil ~clause ~@clauses))]
   [(_ fname & clauses)
    {fname {:type :local :usage :def}}
-   (let [env' (if fname
-                (extend env fname)
-                env)]
-     (extract-from-clauses env' clauses))])
+   (extract-from-clauses (if fname (extend env fname) env) clauses)])
 
 (defn- extract-from-letfn-bindings [env bindings]
   (let [bindings' (partition 2 bindings)
@@ -233,10 +226,9 @@
           (extract-from-case-map env case-map))])
 
 (defn- extract-from-methods [env methods]
-  (->> (for [[mname args & body] methods
-             :let [e {:type :local :usage :def}]]
+  (->> (for [[mname args & body] methods]
          (merge (assoc-if-marked-symbol {} mname {:type :member :name mname})
-                (assoc-each {} e args)
+                (assoc-each {} {:type :local :usage :def} args)
                 (extract-from-forms (extend-with-seq env args) body)))
        (into {})))
 
@@ -249,9 +241,6 @@
   [(_ tagname classname fields :implements interfaces & methods)
    {tagname {:type :class :class (lookup env tagname)}
     classname {:type :class :class (lookup env classname)}}
-   (-> {}
+   (-> (extract-from-methods (extend-with-seq env fields) methods)
        (assoc-each (fn [field] {:type :field :name field}) fields)
-       (assoc-each (fn [if] {:type :class :class (lookup env if)}) interfaces)
-       (as-> info
-         (let [env' (extend-with-seq env fields)]
-           (merge info (extract-from-methods env' methods)))))])
+       (assoc-each (fn [if] {:type :class :class (lookup env if)}) interfaces))])
