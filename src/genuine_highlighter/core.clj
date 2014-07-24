@@ -1,10 +1,7 @@
 (ns genuine-highlighter.core
   (:require [genuine-highlighter [parsing :as p]
                                  [analyzer :as analyzer]
-                                 [renderer :as renderer]]
-            [clojure.java.io :as io]
-            [clojure.string :as str])
-  (:import [java.io BufferedReader]))
+                                 [renderer :as renderer]]))
 
 (defn highlight [rule s & {:keys [ns unfinished suppress-eval?]}]
   (let [ast (p/parse s)]
