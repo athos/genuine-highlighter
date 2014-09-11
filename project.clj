@@ -12,6 +12,8 @@
                  [ring/ring-devel "1.3.0"]
                  [hiccup "1.0.5"]]
   :resource-paths ["resources"]
-  :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.4"]]
+  :profiles {:1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
+             :dev {:dependencies [[org.clojure/tools.namespace "0.2.4"]]
                    :source-paths ["src" "dev" "examples"]}}
+  :aliases {"all" ["with-profile" "dev:1.5"]}
   :global-vars {*warn-on-reflection* true})
