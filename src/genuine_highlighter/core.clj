@@ -1,7 +1,7 @@
 (ns genuine-highlighter.core
   (:require [genuine-highlighter [parsing :as p]
-                                 [analyzer :as analyzer]
-                                 [renderer :as renderer]]))
+                                 [renderer :as renderer]]
+            [symbol-analyzer.core :as ana]))
 
 (defn highlight [rule s & {:keys [ns unfinished suppress-eval?]
                            :or {ns *ns*}}]
@@ -10,5 +10,5 @@
           #_=> unfinished
           (p/unexpected? ast)
           #_=> (throw (ex-info "unexpected" {::type :unexpected :data s}))
-          :else (->> (analyzer/analyze ast :ns ns :suppress-eval? suppress-eval?)
+          :else (->> (ana/analyze ast :ns ns :suppress-eval? suppress-eval?)
                      (renderer/render rule)))))

@@ -1,28 +1,8 @@
 (ns genuine-highlighter.parsing
-  (:require [net.cgrand.parsley :as p]
-            [net.cgrand.sjacket.parser :as s]))
-
-(def new-id
-  (let [n (atom 0)]
-    (fn []
-      (swap! n inc)
-      @n)))
-
-(def ^:private parse*
-  (letfn [(make-node [tag content]
-            (let [node (p/->Node tag content)]
-              (if (= tag :symbol)
-                (assoc node :id (new-id))
-                node)))]
-    (p/make-parser {:main :sexpr*
-                    :space [s/space-nodes :*]
-                    :root-tag :root
-                    :make-node make-node
-                    }
-                   s/rules)))
+  (:require [net.cgrand.sjacket.parser :as p]))
 
 (defn parse [s]
-  (parse* s))
+  (p/parser s))
 
 (defn node-tag [node]
   (:tag node))

@@ -12,7 +12,7 @@
 (defn ^:private colorful-symbol [x v]
   (let [code {:special 36, :macro 33, :var 35, :local 34}
         color (fn [x]
-                (if-let [c (code (:type (:usage x)))]
+                (if-let [c (code (:type (:symbol-info x)))]
                   (color-ansi c v)
                   (str (:symbol x))))]
     (color x)))

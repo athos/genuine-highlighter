@@ -19,7 +19,7 @@
 (defmethod prepare :default [r x]
   [:content (p/node-content x)])
 
-(defmethod prepare :root [r x]
+(defmethod prepare :net.cgrand.sjacket.parser/root [r x]
   [:content (render-seq r (p/node-content* x))])
 
 (defmethod prepare :symbol [r x]
