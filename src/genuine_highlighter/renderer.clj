@@ -29,6 +29,14 @@
               (symbol (p/node-content maybe-ns)))]
     [:content sym]))
 
+(defmethod prepare :string [r x]
+  (let [[_ s _] (p/node-content* x)]
+    [:content (str "\"" s "\"")]))
+
+(defmethod prepare :regex [r x]
+  (let [[_ _ p _] (p/node-content* x)]
+    [:content (str "#\"" p "\"")]))
+
 (defn- prepare-nested [r x open close]
   `[:open ~open
     ~@(let [[open & maybe-content] (p/node-content* x)
