@@ -3,7 +3,8 @@
                                  [analyzer :as analyzer]
                                  [renderer :as renderer]]))
 
-(defn highlight [rule s & {:keys [ns unfinished suppress-eval?]}]
+(defn highlight [rule s & {:keys [ns unfinished suppress-eval?]
+                           :or {ns *ns*}}]
   (let [ast (p/parse s)]
     (cond (p/unfinished? ast)
           #_=> unfinished
