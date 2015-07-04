@@ -35,7 +35,7 @@
   (hiccup/html5
     [:head
       [:title nsname]
-      [:link {:href "css/highlight.css", :rel "stylesheet", :type "text/css"}]]
+      [:link {:href "/css/highlight.css", :rel "stylesheet", :type "text/css"}]]
     [:body
       [:h1 nsname]
       body]))
@@ -66,9 +66,10 @@
          (render-html nsname))))
 
 (defroutes routes
-  (GET "/:nsname" [nsname]
+  (GET "/ns/:nsname" [nsname]
     (handler nsname))
-  (route/resources "/"))
+  (route/resources "/")
+  (route/not-found "Not found"))
 
 (def app
   (-> routes
@@ -79,7 +80,7 @@
     (try
       (let [port (Integer/parseInt (get (System/getenv) "PORT" "8080"))
             server (jetty/run-jetty app {:port port, :join? false})]
-        (browse/browse-url (str "http://localhost:" port "/" (str/replace filename #"/" "%2f")))
+        (browse/browse-url (str "http://localhost:" port "/ns/" (str/replace filename #"/" "%2f")))
         (.join server)))
     (throw (Exception. "specify namespace to be highlighted"))))
 
