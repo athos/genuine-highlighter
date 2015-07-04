@@ -8,7 +8,8 @@
                  [org.clojars.trptcolin/sjacket "0.1.4" :exclusions [[org.clojure/clojure]]]
                  [org.clojure/core.match "0.2.2"]
                  ;; for lein highlight browse functionality
-                 [compojure "1.3.4"]
+                 [compojure "1.3.4" :exclusions [instaparse]]
+                 [instaparse "1.4.1"]
                  [ring/ring-jetty-adapter "1.3.2"]
                  [ring/ring-devel "1.3.2"]
                  [hiccup "1.0.5"]]
