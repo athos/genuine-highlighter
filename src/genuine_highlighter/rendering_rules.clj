@@ -4,7 +4,7 @@
   (when-not (nil? x)
     (apply x args)))
 
-(defn compound-rules [r1 r2]
+(defn compose-rules [r1 r2]
   (fn [type]
     (fn [part]
       (fn [x v]
