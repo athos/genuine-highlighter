@@ -1,4 +1,4 @@
-(ns genuine-highlighter.decoration-rules.terminal)
+(ns genuine-highlighter.rendering-rules.terminal)
 
 (defn color-ansi [c x]
   (format "\033[%dm%s\033[39m" c x))

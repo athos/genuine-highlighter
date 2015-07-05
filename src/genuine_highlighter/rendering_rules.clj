@@ -1,4 +1,4 @@
-(ns genuine-highlighter.decoration-rules)
+(ns genuine-highlighter.rendering-rules)
 
 (defn- maybe [x & args]
   (when-not (nil? x)
