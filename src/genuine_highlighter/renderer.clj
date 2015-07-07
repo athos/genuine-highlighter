@@ -29,6 +29,13 @@
               (symbol (p/node-content maybe-ns)))]
     [:content sym]))
 
+(defmethod prepare :keyword [r x]
+  (let [[pre maybe-ns _ maybe-name] (p/node-content* x)
+        keyword (if maybe-name
+                  (str pre (p/node-content maybe-ns) \/ (p/node-content maybe-name))
+                  (str pre (p/node-content maybe-ns)))]
+    [:content keyword]))
+
 (defmethod prepare :string [r x]
   (let [[_ s _] (p/node-content* x)]
     [:content (str "\"" s "\"")]))
