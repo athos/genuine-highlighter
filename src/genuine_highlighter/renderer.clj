@@ -40,6 +40,11 @@
   (let [[_ s _] (p/node-content* x)]
     [:content (str "\"" s "\"")]))
 
+(defmethod prepare :quote [r x]
+  (let [[quote & contents] (p/node-content* x)]
+    [:quote quote
+     :nodes (render-seq r contents)]))
+
 (defmethod prepare :regex [r x]
   (let [[_ _ p _] (p/node-content* x)]
     [:content (str "#\"" p "\"")]))
