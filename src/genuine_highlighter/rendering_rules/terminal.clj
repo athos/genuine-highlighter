@@ -14,7 +14,7 @@
         color (fn [x]
                 (if-let [c (code (:type (:symbol-info x)))]
                   (color-ansi c v)
-                  (str (:symbol x))))]
+                  (str v)))]
     (color x)))
 
 (def colorful-symbols-rule
