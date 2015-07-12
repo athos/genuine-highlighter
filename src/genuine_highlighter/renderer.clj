@@ -73,6 +73,9 @@
 (defmethod prepare :set [r x]
   (prepare-nested r x "#{" "}"))
 
+(defmethod prepare :fn [r x]
+  (prepare-nested r x "#(" ")"))
+
 (defn render [rule node]
   (->> (prepare rule node)
        (assoc node :content)
