@@ -49,6 +49,13 @@
   (let [[_ comment] (p/node-content* x)]
     [:content (str ";" comment)]))
 
+;; FIXME: The preparation implementation for discard is INCOMPLETE
+;; Discarded forms should be rendered differently from ordinary ones
+(defmethod prepare :discard [r x]
+  (let [[discard & contents] (p/node-content* x)]
+    [:discard discard
+     :nodes (render-seq r contents)]))
+
 (defmethod prepare :regex [r x]
   (let [[_ _ p _] (p/node-content* x)]
     [:content (str "#\"" p "\"")]))
