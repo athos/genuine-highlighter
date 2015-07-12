@@ -50,6 +50,11 @@
     [:meta meta
      :nodes (render-seq r contents)]))
 
+(defmethod prepare :deref [r x]
+  (let [[deref & contents] (p/node-content* x)]
+    [:deref deref
+     :nodes (render-seq r contents)]))
+
 (defmethod prepare :comment [r x]
   (let [[_ comment] (p/node-content* x)]
     [:content (str ";" comment)]))
