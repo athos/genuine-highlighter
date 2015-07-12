@@ -70,6 +70,21 @@
   (let [[_ _ p _] (p/node-content* x)]
     [:content (str "#\"" p "\"")]))
 
+(defmethod prepare :syntax-quote [r x]
+  (let [[syntax-quote & contents] (p/node-content* x)]
+    [:syntax-quote syntax-quote
+     :nodes (render-seq r contents)]))
+
+(defmethod prepare :unquote [r x]
+  (let [[unquote & contents] (p/node-content* x)]
+    [:unquote unquote
+     :nodes (render-seq r contents)]))
+
+(defmethod prepare :unquote-splicing [r x]
+  (let [[unquote-splicing & contents] (p/node-content* x)]
+    [:unquote-splicing unquote-splicing
+     :nodes (render-seq r contents)]))
+
 (defn- prepare-nested [r x open close]
   `[:open ~open
     ~@(let [[open & maybe-content] (p/node-content* x)
