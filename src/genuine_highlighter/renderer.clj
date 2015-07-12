@@ -40,6 +40,10 @@
   (let [[_ s _] (p/node-content* x)]
     [:content (str "\"" s "\"")]))
 
+(defmethod prepare :char [r x]
+  (let [[_ char] (p/node-content* x)]
+    [:content (str "\\" char)]))
+
 (defmethod prepare :quote [r x]
   (let [[quote & contents] (p/node-content* x)]
     [:quote quote
