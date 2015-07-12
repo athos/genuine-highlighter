@@ -45,6 +45,11 @@
     [:quote quote
      :nodes (render-seq r contents)]))
 
+(defmethod prepare :meta [r x]
+  (let [[meta & contents] (p/node-content* x)]
+    [:meta meta
+     :nodes (render-seq r contents)]))
+
 (defmethod prepare :comment [r x]
   (let [[_ comment] (p/node-content* x)]
     [:content (str ";" comment)]))
