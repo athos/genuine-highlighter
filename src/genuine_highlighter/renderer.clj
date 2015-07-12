@@ -45,6 +45,10 @@
     [:quote quote
      :nodes (render-seq r contents)]))
 
+(defmethod prepare :comment [r x]
+  (let [[_ comment] (p/node-content* x)]
+    [:content (str ";" comment)]))
+
 (defmethod prepare :regex [r x]
   (let [[_ _ p _] (p/node-content* x)]
     [:content (str "#\"" p "\"")]))
