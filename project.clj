@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [symbol-analyzer "0.1.1-SNAPSHOT"]
+                 [symbol-analyzer "0.1.1"]
                  [org.clojars.trptcolin/sjacket "0.1.4" :exclusions [[org.clojure/clojure]]]
                  [org.clojure/core.match "0.2.2"]]
   :profiles {:1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
