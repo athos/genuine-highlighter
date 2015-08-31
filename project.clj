@@ -11,5 +11,5 @@
              :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
              :dev {:dependencies [[org.clojure/tools.namespace "0.2.10"]]
                    :source-paths ["src" "dev"]}}
-  :aliases {"all" ["with-profile" "dev:1.5"]}
+  :aliases {"all" ["with-profile" "dev:1.5:1.6"]}
   :global-vars {*warn-on-reflection* true})
